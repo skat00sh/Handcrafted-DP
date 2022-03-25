@@ -135,6 +135,7 @@ figures/
 
 # Wandb files
 wandb/*
+wandbtest.py
 
 #data
 .data/
