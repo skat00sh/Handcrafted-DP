@@ -11,14 +11,17 @@ from models import CNNS, get_num_params
 from dp_utils import ORDERS, get_privacy_spent, get_renyi_divergence, scatter_normalization
 from log import Logger
 
+import time
+
 
 def main(dataset, augment=False, use_scattering=False, size=None,
          batch_size=2048, mini_batch_size=256, sample_batches=False,
          lr=1, optim="SGD", momentum=0.9, nesterov=False,
          noise_multiplier=1, max_grad_norm=0.1, epochs=100,
          input_norm=None, num_groups=None, bn_noise_multiplier=None,
-         max_epsilon=None, logdir=None, early_stop=True):
+         max_epsilon=None, logdir=None, early_stop=True, checkpoint_save_path=None):
 
+    logdir=None
     logger = Logger(logdir)
     device = get_device()
 
@@ -99,10 +102,20 @@ def main(dataset, augment=False, use_scattering=False, size=None,
     flat_count = 0
 
     for epoch in range(0, epochs):
+        epoch_start_time = time.time()
         print(f"\nEpoch: {epoch}")
 
         train_loss, train_acc = train(model, train_loader, optimizer, n_acc_steps=n_acc_steps)
         test_loss, test_acc = test(model, test_loader)
+
+        # if (epoch +1) % 5 ==0:
+        #     torch.save(model.state_dict(), checkpoint_save_path)
+        #     print(f"Epoch: {epoch +1} saved")
+        #
+        # if os.path.exists(checkpoint_save_path):
+        #     model.load_state_dict(torch.load(checkpoint_save_path))
+        #     model.eval()
+        #     print("model loaded from checkpoint")
 
         if noise_multiplier > 0:
             rdp_sgd = get_renyi_divergence(
@@ -129,6 +142,7 @@ def main(dataset, augment=False, use_scattering=False, size=None,
             if flat_count >= 20 and early_stop:
                 print("plateau...")
                 return
+        print("Time per epoch", time.time()-epoch_start_time)
 
 
 if __name__ == '__main__':
@@ -153,5 +167,8 @@ if __name__ == '__main__':
     parser.add_argument('--early_stop', type=bool, default=True)
     parser.add_argument('--sample_batches', action="store_true")
     parser.add_argument('--logdir', default=None)
+    parser.add_argument('--checkpoint_save_path', default=None)
     args = parser.parse_args()
+    total_time_start = time.time()
     main(**vars(args))
+    print(f"Total time for 100 Epochs", time.time()-total_time_start)
