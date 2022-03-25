@@ -5,7 +5,7 @@ import torch
 import torch.nn as nn
 from opacus import PrivacyEngine
 
-from train_utils import get_device, train, test
+from train_utils import get_device, train, test, save_checkpoint
 from data import get_data, get_scatter_transform, get_scattered_loader
 from models import CNNS, get_num_params
 from dp_utils import ORDERS, get_privacy_spent, get_renyi_divergence, scatter_normalization
@@ -19,7 +19,7 @@ def main(dataset, augment=False, use_scattering=False, size=None,
          lr=1, optim="SGD", momentum=0.9, nesterov=False,
          noise_multiplier=1, max_grad_norm=0.1, epochs=100,
          input_norm=None, num_groups=None, bn_noise_multiplier=None,
-         max_epsilon=None, logdir=None, early_stop=True, checkpoint_save_path=None):
+         max_epsilon=None, logdir=None, early_stop=True, checkpoint_save_path=None, save_checkpoint_per_epoch=None):
 
     logdir=None
     logger = Logger(logdir)
@@ -102,20 +102,13 @@ def main(dataset, augment=False, use_scattering=False, size=None,
     flat_count = 0
 
     for epoch in range(0, epochs):
+        is_best_model = False
         epoch_start_time = time.time()
         print(f"\nEpoch: {epoch}")
 
         train_loss, train_acc = train(model, train_loader, optimizer, n_acc_steps=n_acc_steps)
         test_loss, test_acc = test(model, test_loader)
 
-        # if (epoch +1) % 5 ==0:
-        #     torch.save(model.state_dict(), checkpoint_save_path)
-        #     print(f"Epoch: {epoch +1} saved")
-        #
-        # if os.path.exists(checkpoint_save_path):
-        #     model.load_state_dict(torch.load(checkpoint_save_path))
-        #     model.eval()
-        #     print("model loaded from checkpoint")
 
         if noise_multiplier > 0:
             rdp_sgd = get_renyi_divergence(
@@ -136,12 +129,28 @@ def main(dataset, augment=False, use_scattering=False, size=None,
         # stop if we're not making progress
         if test_acc > best_acc:
             best_acc = test_acc
+            is_best_model = True
             flat_count = 0
         else:
             flat_count += 1
             if flat_count >= 20 and early_stop:
                 print("plateau...")
                 return
+
+        if (epoch + 1) % int(save_checkpoint_per_epoch) == 0:
+            checkpoint = {
+                'epoch': epoch + 1,
+                'test_loss': test_loss,
+                'test_accuracy': test_acc,
+                'train_loss': train_loss,
+                'train_acc': train_acc,
+                'state_dict': model.state_dict(),
+                'optimizer': optimizer.state_dict(),
+            }
+
+            save_checkpoint(checkpoint,is_best_model,checkpoint_save_path)
+
+
         print("Time per epoch", time.time()-epoch_start_time)
 
 
@@ -159,7 +168,7 @@ if __name__ == '__main__':
     parser.add_argument('--nesterov', action="store_true")
     parser.add_argument('--noise_multiplier', type=float, default=1)
     parser.add_argument('--max_grad_norm', type=float, default=0.1)
-    parser.add_argument('--epochs', type=int, default=100)
+    parser.add_argument('--epochs', type=int, default=3)
     parser.add_argument('--input_norm', default=None, choices=["GroupNorm", "BN"])
     parser.add_argument('--num_groups', type=int, default=81)
     parser.add_argument('--bn_noise_multiplier', type=float, default=6)
@@ -168,6 +177,7 @@ if __name__ == '__main__':
     parser.add_argument('--sample_batches', action="store_true")
     parser.add_argument('--logdir', default=None)
     parser.add_argument('--checkpoint_save_path', default=None)
+    parser.add_argument('--save_checkpoint_per_epoch', default=5)
     args = parser.parse_args()
     total_time_start = time.time()
     main(**vars(args))

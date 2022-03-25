@@ -1,3 +1,5 @@
+import os
+
 import torch
 import torch.nn.functional as F
 
@@ -80,3 +82,35 @@ def test(model, test_loader):
           f'Accuracy: {correct}/{num_examples} ({test_acc:.2f}%)')
 
     return test_loss, test_acc
+
+
+def save_checkpoint(state: dict, is_best: bool, checkpoint_path: str):
+
+    best_model_dir = os.path.join(checkpoint_path, "best_model")
+    checkpoints_dir =  os.path.join(checkpoint_path,"checkpoints")
+    if not os.path.exists(best_model_dir):
+        os.mkdir(best_model_dir)
+    if not os.path.exists(checkpoints_dir):
+        os.mkdir(checkpoints_dir)
+
+    if is_best:
+        checkpoint_name = best_model_dir + "/best_model" + ".pt"
+    else:
+        checkpoint_name = checkpoints_dir + "/checkpoint_" + str(state['epoch']) + ".pt"
+
+    torch.save(state,checkpoint_name)
+
+
+
+def load_checkpoint(checkpoint_fpath: str, model, optimizer):
+    """
+    checkpoint_path: path to save checkpoint
+    model: model that we want to load checkpoint parameters into
+    optimizer: optimizer we defined in previous training
+    """
+    # TODO: Test the method and model laoding
+    # checkpoint = torch.load(checkpoint_fpath)
+    # model.load_state_dict(checkpoint['state_dict'])
+    # optimizer.load_state_dict(checkpoint['optimizer'])
+    # valid_loss_min = checkpoint['test_loss']
+    # return model, optimizer, checkpoint['epoch'], valid_loss_min.item()
