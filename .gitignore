@@ -132,3 +132,9 @@ dmypy.json
 figures/
 .DS_STORE
 .idea/
+
+# Wandb files
+wandb/*
+
+#data
+.data/
