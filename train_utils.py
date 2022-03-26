@@ -162,8 +162,8 @@ def plot_learning_curve(
     value_2: list,
     values2_title: str,
 ):
-    plt.plot(epochs, values_1, "g", label=values1_title)
-    plt.plot(epochs, value_2, "b", label=values2_title)
+    plt.plot([i for i in range(0, epochs)], values_1, "g", label=values1_title)
+    plt.plot([i for i in range(0, epochs)], value_2, "b", label=values2_title)
     plt.title(title)
     plt.xlabel(x_label)
     plt.ylabel(y_label)

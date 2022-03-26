@@ -271,7 +271,7 @@ def main(
         plot_save_path,
         "Training and Validation Accuracy",
         "EPOCHS",
-        range(1, epochs),
+        epochs,
         "Accuracy",
         learning_history["train_accuracy"],
         "Training Accuracy",
