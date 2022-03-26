@@ -84,10 +84,10 @@ def test(model, test_loader):
     return test_loss, test_acc
 
 
-def save_checkpoint(state: dict, is_best: bool, checkpoint_path: str):
+def save_checkpoint(state: dict, is_best: bool, checkpoint_path: str, COMMON_DIR_SUFFIX: str):
 
-    best_model_dir = os.path.join(checkpoint_path, "best_model")
-    checkpoints_dir =  os.path.join(checkpoint_path,"checkpoints")
+    best_model_dir =  checkpoint_path + '/best_model_' + COMMON_DIR_SUFFIX + '/'
+    checkpoints_dir =  checkpoint_path + '/checkpoints_' + COMMON_DIR_SUFFIX + '/'
     if not os.path.exists(best_model_dir):
         os.mkdir(best_model_dir)
     if not os.path.exists(checkpoints_dir):
@@ -95,10 +95,13 @@ def save_checkpoint(state: dict, is_best: bool, checkpoint_path: str):
 
     if is_best:
         checkpoint_name = best_model_dir + "/best_model" + ".pt"
-    else:
-        checkpoint_name = checkpoints_dir + "/checkpoint_" + str(state['epoch']) + ".pt"
+        torch.save(state, checkpoint_name)
 
+    checkpoint_name = checkpoints_dir + "/checkpoint_EPOCH_" + str(state['epoch']) + ".pt"
     torch.save(state,checkpoint_name)
+    # Saving a copy with a different suffix _last so as to allow for resuming from last EPOCH option
+    checkpoint_name = checkpoints_dir + "/checkpoint_last.pt"
+    torch.save(state, checkpoint_name)
 
 
 
@@ -108,9 +111,21 @@ def load_checkpoint(checkpoint_fpath: str, model, optimizer):
     model: model that we want to load checkpoint parameters into
     optimizer: optimizer we defined in previous training
     """
-    # TODO: Test the method and model laoding
-    # checkpoint = torch.load(checkpoint_fpath)
-    # model.load_state_dict(checkpoint['state_dict'])
-    # optimizer.load_state_dict(checkpoint['optimizer'])
-    # valid_loss_min = checkpoint['test_loss']
-    # return model, optimizer, checkpoint['epoch'], valid_loss_min.item()
+    if os.path.exists(checkpoint_fpath):
+        checkpoint = torch.load(checkpoint_fpath)
+        model.load_state_dict(checkpoint['state_dict'])
+        optimizer.load_state_dict(checkpoint['optimizer'])
+        return model, optimizer, checkpoint['epoch']
+    else:
+        raise FileNotFoundError('No model checkpoint exists at given path')
+
+
+def save_trained_model(model_save_path, model, dataset,optim,epochs):
+    trained_model_save_dir = model_save_path + '/trained_models/'
+    if not os.path.exists(trained_model_save_dir):
+        os.mkdir(trained_model_save_dir)
+    trained_model_save_path = trained_model_save_dir +'/model_' + dataset + '_' + optim + '_' + str(epochs) + '.pt'
+    torch.save(model.state_dict(), trained_model_save_path)
+
+
+
