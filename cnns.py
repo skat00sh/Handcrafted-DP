@@ -53,8 +53,7 @@ def main(
     save_checkpoint_per_epoch=None,
     resume_training_from=False,
 ):
-
-    logdir = None
+    logdir = logdir + "/" + dataset + "_" + optim + "_epoch" + str(epochs) + "_nm" + str(noise_multiplier) + "_cn" + str(max_grad_norm)
     logger = Logger(logdir)
     device = get_device()
 
@@ -242,7 +241,7 @@ def main(
             flat_count += 1
             if flat_count >= 20 and early_stop:
                 print("plateau...")
-                return
+                break
 
         if (epoch + 1) % int(save_checkpoint_per_epoch) == 0:
             checkpoint = {
@@ -301,7 +300,7 @@ if __name__ == "__main__":
     parser.add_argument("--max_epsilon", type=float, default=None)
     parser.add_argument("--early_stop", type=bool, default=True)
     parser.add_argument("--sample_batches", action="store_true")
-    parser.add_argument("--logdir", default=None)
+    parser.add_argument("--logdir", default="logs")
     parser.add_argument("--checkpoint_save_path", default=None)
     parser.add_argument("--save_checkpoint_per_epoch", default=5)
     parser.add_argument(
