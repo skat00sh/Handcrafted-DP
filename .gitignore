@@ -137,5 +137,11 @@ figures/
 wandb/*
 wandbtest.py
 
+# Logs, Plots and checkpoints
+cnn_checkpoints/
+plots/
+logs/
+
+
 #data
 .data/
