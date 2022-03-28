@@ -53,7 +53,19 @@ def main(
     save_checkpoint_per_epoch=None,
     resume_training_from=False,
 ):
-    logdir = logdir + "/" + dataset + "_" + optim + "_epoch" + str(epochs) + "_nm" + str(noise_multiplier) + "_cn" + str(max_grad_norm)
+    logdir = (
+        logdir
+        + "/"
+        + dataset
+        + "_"
+        + optim
+        + "_epoch"
+        + str(epochs)
+        + "_nm"
+        + str(noise_multiplier)
+        + "_cn"
+        + str(max_grad_norm)
+    )
     logger = Logger(logdir)
     device = get_device()
 
@@ -269,13 +281,13 @@ def main(
     plot_save_path = (
         checkpoint_save_path + "/plots/" + "plot_" + COMMON_DIR_SUFFIX + ".png"
     )
-    title = dataset +" Sigma: "+ str(noise_multiplier) + " CN: " + str(max_grad_norm)
+    title = dataset + " Sigma: " + str(noise_multiplier) + " CN: " + str(max_grad_norm)
     if scattering:
         title = title + "Scattering: True"
 
     plot_learning_curve(
         plot_save_path,
-        title ,
+        title,
         "EPOCHS",
         len(learning_history["train_accuracy"]),
         "Accuracy",
