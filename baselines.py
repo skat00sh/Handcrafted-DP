@@ -6,7 +6,15 @@ import torch.nn as nn
 from opacus import PrivacyEngine
 from sklearn.linear_model import LogisticRegression
 
-from train_utils import get_device, train, test
+from train_utils import (
+    get_device,
+    train,
+    test,
+    save_checkpoint,
+    load_checkpoint,
+    save_trained_model,
+    plot_learning_curve,
+)
 from data import get_data, get_scatter_transform, get_scattered_loader
 from models import ScatterLinear, get_num_params
 from dp_utils import (
@@ -36,8 +44,12 @@ def main(
     bn_noise_multiplier=None,
     max_epsilon=None,
     logdir=None,
+    checkpoint_save_path=None,
+    save_checkpoint_per_epoch=None,
+    resume_training_from=False,
 ):
 
+    logdir = logdir + "/baseline_" + dataset + "_" + optim + "_epoch" + str(epochs) + "_nm" + str(noise_multiplier) + "_cn" + str(max_grad_norm)
     logger = Logger(logdir)
     device = get_device()
 
@@ -174,12 +186,62 @@ def main(
     )
     privacy_engine.attach(optimizer)
 
-    for epoch in range(0, epochs):
-        print(f"\nEpoch: {epoch}")
+    start_epoch = 0
+    learning_history = {
+        "train_losses": [],
+        "val_losses": [],
+        "train_accuracy": [],
+        "val_accuracy": [],
+    }
+    COMMON_DIR_SUFFIX = (
+        "baseline_"
+        +dataset
+        + "_"
+        + optimizer.__class__.__name__
+        + "_epoch"
+        + str(epochs)
+        + "_nm"
+        + str(noise_multiplier)
+        + "_cn"
+        + str(max_grad_norm)
+    )
+
+    if resume_training_from == "best_model":
+        best_model_dir = (
+            checkpoint_save_path
+            + "/best_model_"
+            + COMMON_DIR_SUFFIX
+            + "/"
+            + "best_model.pt"
+        )
+        model, optimizer, start_epoch = load_checkpoint(
+            best_model_dir, model, optimizer
+        )
+
+    elif resume_training_from == "last_epoch":
+        checkpoints_dir = (
+            checkpoint_save_path
+            + "/checkpoints_"
+            + COMMON_DIR_SUFFIX
+            + "/"
+            + "checkpoint_last.pt"
+        )
+        model, optimizer, start_epoch = load_checkpoint(
+            checkpoints_dir, model, optimizer
+        )
+    for epoch in range(start_epoch, epochs):
+        #Note: Not sure if we need the best_model thing here but keeping this flag var here for now to be able to add in future if needed
+        is_best_model = False
+        print(f"\nEpoch: {epoch} of {epochs}")
         train_loss, train_acc = train(
             model, train_loader, optimizer, n_acc_steps=n_acc_steps
         )
         test_loss, test_acc = test(model, test_loader)
+        # Storing all losses and accuracies for plotting
+        learning_history["train_losses"].append(train_loss)
+        learning_history["train_accuracy"].append(train_acc)
+        learning_history["val_losses"].append(test_loss)
+        learning_history["val_accuracy"].append(test_acc)
 
         if noise_multiplier > 0:
             rdp_sgd = (
@@ -199,6 +261,41 @@ def main(
 
         logger.log_epoch(epoch, train_loss, train_acc, test_loss, test_acc, epsilon)
         logger.log_scalar("epsilon/train", epsilon, epoch)
+
+        if (epoch + 1) % int(save_checkpoint_per_epoch) == 0:
+            checkpoint = {
+                "epoch": epoch + 1,
+                "test_loss": test_loss,
+                "test_accuracy": test_acc,
+                "train_loss": train_loss,
+                "train_acc": train_acc,
+                "state_dict": model.state_dict(),
+                "optimizer": optimizer.state_dict(),
+            }
+
+            save_checkpoint(
+                checkpoint, is_best_model, checkpoint_save_path, COMMON_DIR_SUFFIX
+            )
+
+    save_trained_model(
+        checkpoint_save_path, model, COMMON_DIR_SUFFIX
+    )
+    plot_save_path = (
+        checkpoint_save_path + "/plots/" + "baseline_plot_" + COMMON_DIR_SUFFIX + ".png"
+    )
+    title = "Baseline: "+ dataset + " Sigma: " + str(noise_multiplier) + " CN: " + str(max_grad_norm)
+
+    plot_learning_curve(
+        plot_save_path,
+        title,
+        "EPOCHS",
+        len(learning_history["train_accuracy"]),
+        "Accuracy",
+        learning_history["train_accuracy"],
+        "Training Accuracy",
+        learning_history["val_accuracy"],
+        "Validation Accuracy",
+    )
 
 
 if __name__ == "__main__":
@@ -222,5 +319,10 @@ if __name__ == "__main__":
     parser.add_argument("--max_epsilon", type=float, default=None)
     parser.add_argument("--sample_batches", action="store_true")
     parser.add_argument("--logdir", default=None)
+    parser.add_argument("--checkpoint_save_path", default=None)
+    parser.add_argument("--save_checkpoint_per_epoch", default=5)
+    parser.add_argument(
+        "--resume_training_from", choices=["best_model", "last_epoch"], default=None
+    )
     args = parser.parse_args()
     main(**vars(args))
