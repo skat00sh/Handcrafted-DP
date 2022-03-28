@@ -5,7 +5,6 @@ import torch
 import torch.nn as nn
 from opacus import PrivacyEngine
 
-import train_utils
 from train_utils import (
     get_device,
     train,
@@ -240,7 +239,8 @@ def main(
             print(f"ε = {epsilon:.3f} (sgd only: ε = {epsilon2:.3f})")
 
             if max_epsilon is not None and epsilon >= max_epsilon:
-                return
+                print(f"Epsilon : {epsilon} is greater than Max Epsilon : {max_epsilon} || Exiting Training loop...")
+                break
         else:
             epsilon = None
 
@@ -276,7 +276,7 @@ def main(
         print("Time per epoch", time.time() - epoch_start_time)
 
     save_trained_model(
-        checkpoint_save_path, model, dataset, optimizer.__class__.__name__, epochs
+        checkpoint_save_path, model, COMMON_DIR_SUFFIX
     )
     plot_save_path = (
         checkpoint_save_path + "/plots/" + "plot_" + COMMON_DIR_SUFFIX + ".png"
