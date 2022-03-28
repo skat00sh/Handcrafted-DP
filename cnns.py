@@ -197,7 +197,6 @@ def main(
         model, optimizer, start_epoch = load_checkpoint(
             checkpoints_dir, model, optimizer
         )
-
     for epoch in range(start_epoch, epochs):
         is_best_model = False
         epoch_start_time = time.time()
@@ -268,9 +267,9 @@ def main(
     )
     plot_learning_curve(
         plot_save_path,
-        "Training and Validation Accuracy",
+        dataset +" Sigma: "+ str(noise_multiplier) + " CN: " + str(max_grad_norm) ,
         "EPOCHS",
-        epochs,
+        len(learning_history["train_accuracy"]),
         "Accuracy",
         learning_history["train_accuracy"],
         "Training Accuracy",
