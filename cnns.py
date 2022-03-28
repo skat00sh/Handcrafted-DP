@@ -62,6 +62,7 @@ def main(
     if use_scattering:
         scattering, K, _ = get_scatter_transform(dataset)
         scattering.to(device)
+        logdir = logdir + "_scattering_true"
     else:
         scattering = None
         K = 3 if len(train_data.data.shape) == 4 else 1
@@ -174,6 +175,9 @@ def main(
         + "_cn"
         + str(max_grad_norm)
     )
+    if scattering:
+        COMMON_DIR_SUFFIX = COMMON_DIR_SUFFIX + "_scattering_true"
+
     if resume_training_from == "best_model":
         best_model_dir = (
             checkpoint_save_path
@@ -265,9 +269,13 @@ def main(
     plot_save_path = (
         checkpoint_save_path + "/plots/" + "plot_" + COMMON_DIR_SUFFIX + ".png"
     )
+    title = dataset +" Sigma: "+ str(noise_multiplier) + " CN: " + str(max_grad_norm)
+    if scattering:
+        title = title + "Scattering: True"
+
     plot_learning_curve(
         plot_save_path,
-        dataset +" Sigma: "+ str(noise_multiplier) + " CN: " + str(max_grad_norm) ,
+        title ,
         "EPOCHS",
         len(learning_history["train_accuracy"]),
         "Accuracy",
