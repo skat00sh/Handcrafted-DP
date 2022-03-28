@@ -134,20 +134,14 @@ def load_checkpoint(checkpoint_fpath: str, model, optimizer):
         raise FileNotFoundError("No model checkpoint exists at given path")
 
 
-def save_trained_model(model_save_path, model, dataset, optim, epochs):
+def save_trained_model(model_save_path, model, COMMON_DIR_SUFFIX):
     trained_model_save_dir = model_save_path + "/trained_models/"
     if not os.path.exists(trained_model_save_dir):
         os.mkdir(trained_model_save_dir)
     trained_model_save_path = (
-        trained_model_save_dir
-        + "/model_"
-        + dataset
-        + "_"
-        + optim
-        + "_"
-        + str(epochs)
-        + ".pt"
+        COMMON_DIR_SUFFIX + ".pt"
     )
+    print(f"Trained Model Save Path: {trained_model_save_path}")
     torch.save(model.state_dict(), trained_model_save_path)
 
 

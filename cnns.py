@@ -52,19 +52,35 @@ def main(
     save_checkpoint_per_epoch=None,
     resume_training_from=False,
 ):
-    logdir = (
-        logdir
-        + "/"
-        + dataset
-        + "_"
-        + optim
-        + "_epoch"
-        + str(epochs)
-        + "_nm"
-        + str(noise_multiplier)
-        + "_cn"
-        + str(max_grad_norm)
-    )
+    if use_scattering:
+        logdir = (
+            logdir
+            + "/"
+            + dataset
+            + "_"
+            + optim
+            + "_epoch"
+            + str(epochs)
+            + "_nm"
+            + str(noise_multiplier)
+            + "_cn"
+            + str(max_grad_norm)
+            + "_scattering_True"
+        )
+    else:
+        logdir = (
+            logdir
+            + "/"
+            + dataset
+            + "_"
+            + optim
+            + "_epoch"
+            + str(epochs)
+            + "_nm"
+            + str(noise_multiplier)
+            + "_cn"
+            + str(max_grad_norm)
+        )
     logger = Logger(logdir)
     device = get_device()
 
@@ -73,7 +89,6 @@ def main(
     if use_scattering:
         scattering, K, _ = get_scatter_transform(dataset)
         scattering.to(device)
-        logdir = logdir + "_scattering_true"
     else:
         scattering = None
         K = 3 if len(train_data.data.shape) == 4 else 1
@@ -175,19 +190,32 @@ def main(
         "train_accuracy": [],
         "val_accuracy": [],
     }
-    COMMON_DIR_SUFFIX = (
-        dataset
-        + "_"
-        + optimizer.__class__.__name__
-        + "_epoch"
-        + str(epochs)
-        + "_nm"
-        + str(noise_multiplier)
-        + "_cn"
-        + str(max_grad_norm)
-    )
+
     if scattering:
-        COMMON_DIR_SUFFIX = COMMON_DIR_SUFFIX + "_scattering_true"
+        COMMON_DIR_SUFFIX = (
+            dataset
+            + "_"
+            + optimizer.__class__.__name__
+            + "_epoch"
+            + str(epochs)
+            + "_nm"
+            + str(noise_multiplier)
+            + "_cn"
+            + str(max_grad_norm)
+            + "scattering_True"
+        )
+    else:
+        COMMON_DIR_SUFFIX = (
+            dataset
+            + "_"
+            + optimizer.__class__.__name__
+            + "_epoch"
+            + str(epochs)
+            + "_nm"
+            + str(noise_multiplier)
+            + "_cn"
+            + str(max_grad_norm)
+        )
 
     if resume_training_from == "best_model":
         best_model_dir = (
