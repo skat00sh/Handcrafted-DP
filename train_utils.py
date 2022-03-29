@@ -139,7 +139,7 @@ def save_trained_model(model_save_path, model, COMMON_DIR_SUFFIX):
     if not os.path.exists(trained_model_save_dir):
         os.mkdir(trained_model_save_dir)
     trained_model_save_path = (
-        COMMON_DIR_SUFFIX + ".pt"
+        trained_model_save_dir + COMMON_DIR_SUFFIX + ".pt"
     )
     print(f"Trained Model Save Path: {trained_model_save_path}")
     torch.save(model.state_dict(), trained_model_save_path)
