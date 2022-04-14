@@ -58,41 +58,45 @@ def main(
     if not os.path.exists(results_home):
         os.mkdir(results_home)
 
-    results_dir = os.path.join(results_home,f'results_from_run_{dataset}_{optim}_sigma_{noise_multiplier}_clip_norm_{max_grad_norm}')
+    results_dir = os.path.join(results_home,f'results_from_run_{dataset}_{optim}_epochs_{epochs}_batch_size_{batch_size}_sigma_{noise_multiplier}_clip_norm_{max_grad_norm}')
     if not os.path.exists(results_dir):
         os.mkdir(results_dir)
 
     if use_scattering:
         logdir = (
-            results_dir
+            results_home
             +
             logdir
             + "/"
             + dataset
             + "_"
             + optim
-            + "_epoch"
+            + "_epochs_"
             + str(epochs)
-            + "_nm"
+            + "_batch_size_"
+            + str(batch_size)
+            + "_nm_"
             + str(noise_multiplier)
-            + "_cn"
+            + "_cn_"
             + str(max_grad_norm)
             + "_scattering_True"
         )
     else:
         logdir = (
-            results_dir
+            results_home
             +
             logdir
             + "/"
             + dataset
             + "_"
             + optim
-            + "_epoch"
+            + "_epochs_"
             + str(epochs)
-            + "_nm"
+            + "_batch_size_"
+            + str(batch_size)
+            + "_nm_"
             + str(noise_multiplier)
-            + "_cn"
+            + "_cn_"
             + str(max_grad_norm)
         )
     logger = Logger(logdir)
