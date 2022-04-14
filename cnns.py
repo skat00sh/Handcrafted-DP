@@ -25,6 +25,7 @@ from dp_utils import (
 from log import Logger
 
 import time
+import numpy as np
 
 
 def main(
@@ -48,12 +49,23 @@ def main(
     max_epsilon=None,
     logdir=None,
     early_stop=True,
-    checkpoint_save_path=None,
+    results_path=None,
     save_checkpoint_per_epoch=None,
     resume_training_from=False,
 ):
+
+    results_home = os.path.join(results_path,'results')
+    if not os.path.exists(results_home):
+        os.mkdir(results_home)
+
+    results_dir = os.path.join(results_home,f'results_from_run_{dataset}_{optim}_sigma_{noise_multiplier}_clip_norm_{max_grad_norm}')
+    if not os.path.exists(results_dir):
+        os.mkdir(results_dir)
+
     if use_scattering:
         logdir = (
+            results_dir
+            +
             logdir
             + "/"
             + dataset
@@ -69,6 +81,8 @@ def main(
         )
     else:
         logdir = (
+            results_dir
+            +
             logdir
             + "/"
             + dataset
@@ -196,30 +210,30 @@ def main(
             dataset
             + "_"
             + optimizer.__class__.__name__
-            + "_epoch"
+            + "_epochs_"
             + str(epochs)
-            + "_nm"
+            + "_nm_"
             + str(noise_multiplier)
-            + "_cn"
+            + "_cn_"
             + str(max_grad_norm)
-            + "scattering_True"
+            + "_scattering_True"
         )
     else:
         COMMON_DIR_SUFFIX = (
             dataset
             + "_"
             + optimizer.__class__.__name__
-            + "_epoch"
+            + "_epochs_"
             + str(epochs)
-            + "_nm"
+            + "_nm_"
             + str(noise_multiplier)
-            + "_cn"
+            + "_cn_"
             + str(max_grad_norm)
         )
 
     if resume_training_from == "best_model":
         best_model_dir = (
-            checkpoint_save_path
+            results_dir
             + "/best_model_"
             + COMMON_DIR_SUFFIX
             + "/"
@@ -231,7 +245,7 @@ def main(
 
     elif resume_training_from == "last_epoch":
         checkpoints_dir = (
-            checkpoint_save_path
+            results_dir
             + "/checkpoints_"
             + COMMON_DIR_SUFFIX
             + "/"
@@ -274,6 +288,7 @@ def main(
 
         logger.log_epoch(epoch, train_loss, train_acc, test_loss, test_acc, epsilon)
         logger.log_scalar("epsilon/train", epsilon, epoch)
+        logger.log_scalar("Max Grad Norm", privacy_engine.max_grad_norm, epoch)
 
         # stop if we're not making progress
         if test_acc > best_acc:
@@ -286,29 +301,33 @@ def main(
                 print("plateau...")
                 break
 
+        checkpoint = {
+            "epoch": epoch + 1,
+            "test_loss": test_loss,
+            "test_accuracy": test_acc,
+            "train_loss": train_loss,
+            "train_acc": train_acc,
+            "state_dict": model.state_dict(),
+            "optimizer": optimizer.state_dict(),
+            "epsilon": epsilon
+        }
         if (epoch + 1) % int(save_checkpoint_per_epoch) == 0:
-            checkpoint = {
-                "epoch": epoch + 1,
-                "test_loss": test_loss,
-                "test_accuracy": test_acc,
-                "train_loss": train_loss,
-                "train_acc": train_acc,
-                "state_dict": model.state_dict(),
-                "optimizer": optimizer.state_dict(),
-            }
 
             save_checkpoint(
-                checkpoint, is_best_model, checkpoint_save_path, COMMON_DIR_SUFFIX
+                checkpoint, is_best_model, results_dir, COMMON_DIR_SUFFIX
             )
 
         print("Time per epoch", time.time() - epoch_start_time)
 
     save_trained_model(
-        checkpoint_save_path, model, COMMON_DIR_SUFFIX
+        results_dir, checkpoint, COMMON_DIR_SUFFIX
     )
     plot_save_path = (
-        checkpoint_save_path + "/plots/" + "plot_" + COMMON_DIR_SUFFIX + ".png"
+        results_dir + "/plots/" + "plot_" + COMMON_DIR_SUFFIX + ".png"
     )
+    if not os.path.exists(results_dir + "/plots/"):
+        os.mkdir(results_dir + "/plots/")
+
     title = dataset + " Sigma: " + str(noise_multiplier) + " CN: " + str(max_grad_norm)
     if scattering:
         title = title + "Scattering: True"
@@ -339,7 +358,7 @@ if __name__ == "__main__":
     parser.add_argument("--momentum", type=float, default=0.9)
     parser.add_argument("--nesterov", action="store_true")
     parser.add_argument("--noise_multiplier", type=float, default=1)
-    parser.add_argument("--max_grad_norm", type=float, default=0.1)
+    parser.add_argument("--max_grad_norm", type=float, default=np.inf)
     parser.add_argument("--epochs", type=int, default=100)
     parser.add_argument("--input_norm", default=None, choices=["GroupNorm", "BN"])
     parser.add_argument("--num_groups", type=int, default=81)
@@ -348,7 +367,7 @@ if __name__ == "__main__":
     parser.add_argument("--early_stop", type=bool, default=True)
     parser.add_argument("--sample_batches", action="store_true")
     parser.add_argument("--logdir", default="logs")
-    parser.add_argument("--checkpoint_save_path", default=None)
+    parser.add_argument("--results_path", default=None)
     parser.add_argument("--save_checkpoint_per_epoch", default=5)
     parser.add_argument(
         "--resume_training_from", choices=["best_model", "last_epoch"], default=None
