@@ -142,7 +142,7 @@ def save_trained_model(model_save_path, model, COMMON_DIR_SUFFIX):
         trained_model_save_dir + COMMON_DIR_SUFFIX + ".pt"
     )
     print(f"Trained Model Save Path: {trained_model_save_path}")
-    torch.save(model.state_dict(), trained_model_save_path)
+    torch.save(model, trained_model_save_path)
 
 
 def plot_learning_curve(
