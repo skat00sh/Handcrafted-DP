@@ -141,6 +141,9 @@ wandbtest.py
 cnn_checkpoints/
 plots/
 logs/
+*.pt
+*.npy
+
 
 
 #data
