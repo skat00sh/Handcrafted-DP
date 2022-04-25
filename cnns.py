@@ -377,6 +377,6 @@ if __name__ == "__main__":
         "--resume_training_from", choices=["best_model", "last_epoch"], default=None
     )
     args = parser.parse_args()
-    total_time_start = time.time()
+    total_time_start = time.perf_counter()
     main(**vars(args))
-    print(f"Total time for 100 Epochs", time.time() - total_time_start)
+    print(f"Total time for 100 Epochs", time.perf_counter() - total_time_start)
