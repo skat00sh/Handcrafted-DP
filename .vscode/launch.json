@@ -1,0 +1,38 @@
+{
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "name": "Python: Handcrafted-DP-CIFAR10",
+            "type": "python",
+            "request": "launch",
+            "program": "/home/skatoosh/project/fraunhofer/Handcrafted-DP/cnns.py",
+            "console": "integratedTerminal",
+            "justMyCode": true,
+            "args": [
+                "--dataset=cifar10",
+                "--epochs=10",
+                "--results_path=/home/skatoosh/project/fraunhofer/Handcrafted-DP/results_augmented_adam",
+                "--noise_multiplier=0",
+                "--batch_size=1024",
+                "--logdir=/logs_augmented_adam",
+                "--augment",
+                "--optim=Adam"
+
+                
+            ]
+        },
+        {
+            "name": "Python: Handcrafted-DP",
+            "type": "python",
+            "request": "launch",
+            "program": "/home/skatoosh/project/fraunhofer/Handcrafted-DP/cnns.py",
+            "console": "integratedTerminal",
+            "justMyCode": true,
+            "args": [
+                "--dataset=mnist",
+                "--epochs=10",
+                "--results_path=/home/skatoosh/project/fraunhofer/Handcrafted-DP/results"
+            ]
+        }
+    ]
+}

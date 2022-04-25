@@ -56,7 +56,7 @@ def main(
 
     results_home = os.path.join(results_path,'results')
     if not os.path.exists(results_home):
-        os.mkdir(results_home)
+        os.makedirs(results_home)
 
     results_dir = os.path.join(results_home,f'results_from_run_{dataset}_{optim}_epochs_{epochs}_batch_size_{batch_size}_sigma_{noise_multiplier}_clip_norm_{max_grad_norm}')
     if not os.path.exists(results_dir):
