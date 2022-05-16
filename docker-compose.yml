@@ -1,0 +1,15 @@
+services: 
+  handcrafted-dp:
+    container_name: handcrafted-dp
+    runtime: nvidia
+    environment:
+      - NVIDIA_VISIBLE_DEVICES=2
+      - NVIDIA_DRIVER_CAPABILITIES=all
+    build:
+      context: ./
+    stdin_open: true 
+    tty: true               
+    volumes:
+    - .:/workspace/
+    ports:
+      - 5678:5678
