@@ -5,6 +5,8 @@ import torch
 import torch.nn as nn
 from opacus import PrivacyEngine
 
+import pudb
+
 from train_utils import (
     get_device,
     train,
@@ -99,6 +101,8 @@ def main(
             + "_cn_"
             + str(max_grad_norm)
         )
+    if not os.path.exists(logdir):
+        os.makedirs(logdir)
     logger = Logger(logdir)
     device = get_device()
 
@@ -302,7 +306,7 @@ def main(
         else:
             flat_count += 1
             if flat_count >= 20 and early_stop:
-                print("plateau...")
+                print(f"plateau... and {early_stop}")
                 break
 
         checkpoint = {
@@ -368,7 +372,7 @@ if __name__ == "__main__":
     parser.add_argument("--num_groups", type=int, default=81)
     parser.add_argument("--bn_noise_multiplier", type=float, default=6)
     parser.add_argument("--max_epsilon", type=float, default=None)
-    parser.add_argument("--early_stop", type=bool, default=True)
+    parser.add_argument("--early_stop", action="store_false")
     parser.add_argument("--sample_batches", action="store_true")
     parser.add_argument("--logdir", default="logs")
     parser.add_argument("--results_path", default=None)
@@ -378,5 +382,7 @@ if __name__ == "__main__":
     )
     args = parser.parse_args()
     total_time_start = time.perf_counter()
+    print(args.early_stop)
+    # pu.db
     main(**vars(args))
     print(f"Total time for 100 Epochs", time.perf_counter() - total_time_start)
