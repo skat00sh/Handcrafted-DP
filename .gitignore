@@ -148,3 +148,5 @@ logs/
 
 #data
 .data/
+results/
+results_augmented_adam
