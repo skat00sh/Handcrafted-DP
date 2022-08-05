@@ -9,6 +9,16 @@ do
 
 done
 
+## For CIFAR10
+# for SIGMA in 0.1 0.2 0.5 1.0 1.5
+# do
+#         for CLIP_NORM in 0.1 0.2 0.3 0.5 
+#         do
+#          python3 cnns.py --dataset=cifar10 --batch_size=1024 --lr=1 --noise_multiplier=$SIGMA --max_grad_norm=$CLIP_NORM --checkpoint_save_path=/opt/sperl/students/devendra/projects/Handcrafted-DP/mulit_run_results/1 --logdir=/logs
+#         done
+
+# done
+
 #####
 ## Run config for Docker
 #####
