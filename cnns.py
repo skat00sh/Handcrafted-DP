@@ -107,6 +107,8 @@ def main(
     device = get_device()
 
     train_data, test_data = get_data(dataset, augment=augment)
+    # train_data.data = train_data.data 
+    # test_data.data = test_data.data 
 
     if use_scattering:
         scattering, K, _ = get_scatter_transform(dataset)
@@ -263,6 +265,7 @@ def main(
             checkpoints_dir, model, optimizer
         )
     for epoch in range(start_epoch, epochs):
+        print(f"{torch.cuda.current_device()}")
         is_best_model = False
         epoch_start_time = time.time()
         print(f"\nEpoch: {epoch} of {epochs}")
@@ -372,7 +375,7 @@ if __name__ == "__main__":
     parser.add_argument("--num_groups", type=int, default=81)
     parser.add_argument("--bn_noise_multiplier", type=float, default=6)
     parser.add_argument("--max_epsilon", type=float, default=None)
-    parser.add_argument("--early_stop", action="store_false")
+    parser.add_argument("--early_stop", action="store_true")
     parser.add_argument("--sample_batches", action="store_true")
     parser.add_argument("--logdir", default="logs")
     parser.add_argument("--results_path", default=None)
