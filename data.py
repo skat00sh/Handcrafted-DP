@@ -33,12 +33,11 @@ def get_data(name, augment=False, **kwargs):
                     transforms.RandomHorizontalFlip(),
                     transforms.RandomCrop(32, 4),
                     transforms.ToTensor(),
-                    normalize,
+                    
                 ]
         else:
             train_transforms = [
                 transforms.ToTensor(),
-                normalize,
             ]
 
         train_set = datasets.CIFAR10(root=".data", train=True,
@@ -47,7 +46,7 @@ def get_data(name, augment=False, **kwargs):
 
         test_set = datasets.CIFAR10(root=".data", train=False,
                                     transform=transforms.Compose(
-                                        [transforms.ToTensor(), normalize]
+                                        [transforms.ToTensor()]
                                     ))
 
     elif name == "fmnist":
